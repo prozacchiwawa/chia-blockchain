@@ -6,7 +6,7 @@ from clvm.casts import int_from_bytes
 from clvm.EvalError import EvalError
 from clvm.serialize import sexp_from_stream, sexp_to_stream
 from chia_rs import MEMPOOL_MODE, run_chia_program, serialized_length, run_generator
-from clvm_tools.curry import curry, uncurry
+from clvm_tools.curry import uncurry
 
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.util.hash import std_hash
@@ -15,6 +15,24 @@ from chia.types.spend_bundle_conditions import SpendBundleConditions, Spend
 
 from .tree_hash import sha256_treehash
 
+### EXPERIMENTAL -- fast curry impl
+import os
+from clvm_tools.curry import curry as orig_curry
+
+
+def basic_python_curry(program,args):
+    fixed_args = 1
+    alen = len(args)
+    for i_rev in range(alen):
+        i = alen - i_rev - 1
+        fixed_args = [4, (1, args[i]), fixed_args]
+    result = Program.to([2, (1, program), fixed_args])
+    return (-1, result)
+
+
+curry = orig_curry
+if 'FAST_CURRY' in os.environ:
+    curry = basic_python_curry
 
 INFINITE_COST = 0x7FFFFFFFFFFFFFFF
 
